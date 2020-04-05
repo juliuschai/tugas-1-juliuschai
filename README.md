@@ -16,7 +16,7 @@ Jangan lupa untuk mengganti nama pada judul halaman HTML yang tersedia dengan NR
 ![Foto obyek](foto.jpg)
 
 ## Animasi (GIF) Aplikasi WebGL
-![Animasi aplikasi WebGL](animasi.gif)
+![Animasi aplikasi WebGL](preview.gif)
 
 ## Referensi
 - [Learning WebGL on Github](https://github.com/davidwparker/programmingtil-webgl)
