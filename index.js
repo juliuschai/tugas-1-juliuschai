@@ -13150,11 +13150,12 @@ function main() {
     attribute vec3 aPosition;
     attribute vec3 aColor;
     uniform mat4 uModelMatrix;
+    uniform mat4 uProjection;
     varying vec3 vColor;
 
     void main(void) {
       vColor = aColor;
-      gl_Position = uModelMatrix * vec4(aPosition.x/2.9, (aPosition.y-0.6)/2.9, aPosition.z/2.9, 1.0);
+      gl_Position = uModelMatrix * vec4(aPosition, 1.0);
     }
   `
   
@@ -13210,7 +13211,20 @@ function main() {
   
   
   // Additional code goes here
+  // projection field of view and clip distance matrix
+	var n = 1, f = 50, fov = 60;
+	var r = n * Math.tan(fov * Math.PI / 180 / 2);
+	var projectionMatrix = [
+		n/r, 0, 0, 0,
+		0, n/r, 0, 0,
+		0, 0, -(f+n)/(f-n), -1,
+		0, 0, -2*f*n/(f-n), 0
+	];
+	
+  var projection = rightGL.getUniformLocation(rightShaderProgram, "uProjection");
+	rightGL.uniformMatrix4fv(projection, false, projectionMatrix);
 
+  // Start of rotation algorithms
   function updateAngle2D(angle) {
     // % 360 to ensure the angle is < 360 degrees.
     return (angle + LEFT_ANGLE_PER_FRAME) % 360;
@@ -13241,17 +13255,30 @@ function main() {
     leftAngle = updateAngle2D(leftAngle);
     let leftRadian = Math.PI * leftAngle / 180.0;
     var leftModelMatrix = mat4.fromRotation(mat4.create(), leftRadian, vec3.fromValues(0,0,1));
-    leftGL.uniformMatrix4fv(leftUModelMatrix, false, leftModelMatrix);
+    leftGL.uniformMatrix4fv(leftUModelMatrix, false, new Float32Array(leftModelMatrix));
 
     rightAngleX = updateAngle3DX(rightAngleX);
     rightAngleY = updateAngle3DY(rightAngleY);
     let rightRadianX = Math.PI * rightAngleX / 180.0;
     let rightRadianY = Math.PI * rightAngleY / 180.0;
 
-    var rightModelMatrix;
-    rightModelMatrix = mat4.fromRotation(mat4.create(), rightRadianX, vec3.fromValues(1,0,0));
+    var rightModelMatrix = projectionMatrix;
+    // Move the matrix back
+    rightModelMatrix = mat4.translate(mat4.create(), rightModelMatrix, vec3.fromValues(0,0,-2));
+    // Fix model size
+    rightModelMatrix = mat4.scale(mat4.create(), rightModelMatrix, vec3.fromValues(1/4,1/4,1/4));
+    // Fix model placement (It's a little too high, the center point of model is 0.6 in the 3d model in blender)
+    // We push it down a little bit
+    rightModelMatrix = mat4.translate(mat4.create(), rightModelMatrix, vec3.fromValues(0,-0.6,0));
+    // scaleMat = mat4.fromScaling(mat4.create(), vec3.fromValues(1/4,1/4,1/4));
+    // transMat = mat4.fromTranslation(mat4.create(), vec3.fromValues(0,-0.1,0));
+    // rightModelMatrix = mat4.multiply(mat4.create(), transMat, scaleMat);
+    // center model location
+    // rotate
+    rightModelMatrix = mat4.rotate(mat4.create(), rightModelMatrix, rightRadianX, vec3.fromValues(1,0,0));
     rightModelMatrix = mat4.rotate(mat4.create(), rightModelMatrix, rightRadianY, vec3.fromValues(0,1,0));
-    rightGL.uniformMatrix4fv(rightUModelMatrix, false, rightModelMatrix);
+    // rightModelMatrix = mat4.multiply(mat4.create(), projectionMatrix, rightModelMatrix);
+    rightGL.uniformMatrix4fv(rightUModelMatrix, false, new Float32Array(rightModelMatrix));
 
     leftGL.clear(leftGL.COLOR_BUFFER_BIT);
     leftGL.drawArrays(leftGL.TRIANGLES, 0, twoDimFaces*3);
