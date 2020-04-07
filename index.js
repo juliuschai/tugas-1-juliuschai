@@ -13155,7 +13155,7 @@ function main() {
 
     void main(void) {
       vColor = aColor;
-      gl_Position = uModelMatrix * vec4(aPosition, 1.0);
+      gl_Position = uModelMatrix * vec4(aPosition.x, aPosition.y-0.6, aPosition.z, 1.0);
     }
   `
   
@@ -13267,9 +13267,8 @@ function main() {
     rightModelMatrix = mat4.translate(mat4.create(), rightModelMatrix, vec3.fromValues(0,0,-2));
     // Fix model size
     rightModelMatrix = mat4.scale(mat4.create(), rightModelMatrix, vec3.fromValues(1/4,1/4,1/4));
-    // Fix model placement (It's a little too high, the center point of model is 0.6 in the 3d model in blender)
-    // We push it down a little bit
-    rightModelMatrix = mat4.translate(mat4.create(), rightModelMatrix, vec3.fromValues(0,-0.6,0));
+    // Fixing the model placement must be done before model is rotated, pushing the model down moved to vertex shader code
+    // rightModelMatrix = mat4.translate(mat4.create(), rightModelMatrix, vec3.fromValues(0,-0.6,0));
     // scaleMat = mat4.fromScaling(mat4.create(), vec3.fromValues(1/4,1/4,1/4));
     // transMat = mat4.fromTranslation(mat4.create(), vec3.fromValues(0,-0.1,0));
     // rightModelMatrix = mat4.multiply(mat4.create(), transMat, scaleMat);
